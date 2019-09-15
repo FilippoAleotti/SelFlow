@@ -10,7 +10,7 @@ from utils import mvn
 
 class BasicDataset(object):
     def __init__(self, crop_h=320, crop_w=896, batch_size=4, data_list_file='path_to_your_data_list_file', 
-                 img_dir='path_to_your_image_directory', fake_flow_occ_dir='path_to_your_fake_flow_occlusion_directory', is_normalize_img=True):
+                 img_dir='path_to_your_image_directory', fake_flow_occ_dir='path_to_your_fake_flow_occlusion_directory', is_normalize_img=True, shape=[]):
         self.crop_h = crop_h
         self.crop_w = crop_w
         self.batch_size = batch_size
@@ -19,7 +19,8 @@ class BasicDataset(object):
         self.data_num = self.data_list.shape[0]
         self.fake_flow_occ_dir = fake_flow_occ_dir
         self.is_normalize_img = is_normalize_img
-    
+        self.shape = shape
+
     # KITTI's data format for storing flow and mask
     # The first two channels are flow, the third channel is mask
     def extract_flow_and_mask(self, flow):
@@ -42,7 +43,12 @@ class BasicDataset(object):
         img1 = tf.cast(img1, tf.float32)
         img2 = tf.image.decode_png(tf.read_file(img2_name), channels=3)
         img2 = tf.cast(img2, tf.float32)    
- 
+
+        if len(self.shape) != 0:
+            img0 = tf.image.resize_images(img0, [self.shape[1], self.shape[0]])
+            img1 = tf.image.resize_images(img1, [self.shape[1], self.shape[0]])
+            img2 = tf.image.resize_images(img2, [self.shape[1], self.shape[0]])
+
         return img0, img1, img2    
     
     # For Validation or Testing

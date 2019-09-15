@@ -81,7 +81,7 @@ class SelFlowModel(object):
     
                     
     def test(self, restore_model, save_dir, is_normalize_img=True):
-        dataset = BasicDataset(data_list_file=self.dataset_config['data_list_file'], img_dir=self.dataset_config['img_dir'], is_normalize_img=is_normalize_img)
+        dataset = BasicDataset(data_list_file=self.dataset_config['data_list_file'], img_dir=self.dataset_config['img_dir'], is_normalize_img=is_normalize_img, shape=[640,192])
         save_name_list = dataset.data_list[:, -1]
         iterator = dataset.create_one_shot_iterator(dataset.data_list, num_parallel_calls=self.num_input_threads)
         batch_img0, batch_img1, batch_img2 = iterator.get_next()
@@ -113,11 +113,15 @@ class SelFlowModel(object):
             os.makedirs(save_dir)           
         for i in range(dataset.data_num):
             np_flow_fw, np_flow_bw, np_flow_fw_color, np_flow_bw_color = sess.run([flow_fw['full_res'], flow_bw['full_res'], flow_fw_color, flow_bw_color])
-            misc.imsave('%s/flow_fw_color_%s.png' % (save_dir, save_name_list[i]), np_flow_fw_color[0])
-            misc.imsave('%s/flow_bw_color_%s.png' % (save_dir, save_name_list[i]), np_flow_bw_color[0])
-            write_flo('%s/flow_fw_%s.flo' % (save_dir, save_name_list[i]), np_flow_fw[0])
-            write_flo('%s/flow_bw_%s.flo' % (save_dir, save_name_list[i]), np_flow_bw[0])
-            print('Finish %d/%d' % (i+1, dataset.data_num))    
+            #misc.imsave('%s/flow_bw_color_%s.png' % (save_dir, save_name_list[i]), np_flow_bw_color[0])
+            directory = os.path.join(save_dir, os.path.dirname(save_name_list[i]))
+            for x in ['fw']:
+                if not os.path.exists(directory+'/{}'.format(x)):
+                    os.makedirs(directory+'/{}'.format(x))
+            #misc.imsave('{}/visual/{}.png'.format(directory, os.path.basename(save_name_list[i])), np_flow_fw_color[0])
+            write_flo('{}/{}/{}.flo'.format(directory, 'fw', os.path.basename(save_name_list[i])), np_flow_fw[0])
+            #write_flo('{}/{}/{}.flo'.format(directory, 'bw', os.path.basename(save_name_list[i])), np_flow_bw[0])
+            print('Finish %d/%d' % (i+1, dataset.data_num))
          
         
 
